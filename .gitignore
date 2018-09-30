@@ -102,3 +102,16 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# test config
+test*.json
+
+# database
+*.db
+
+# idea
+.idea
+
+# model
+*/*.pickle
+*.pickle
