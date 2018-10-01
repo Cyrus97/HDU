@@ -1,0 +1,5 @@
+requests==2.19.1
+numpy==1.15.1
+Pillow==5.2.0
+beautifulsoup4==4.6.3
+scikit_learn==0.20.0
