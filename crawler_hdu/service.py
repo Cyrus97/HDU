@@ -120,8 +120,8 @@ class ElectiveService(BaseService):
 
             try:
                 page = self.session.post(self.url, data=form_data)
-                soup = BeautifulSoup(page.text, 'html.parser').find('form')  # 使用 lxml 时会解析丢失
-                print(soup)
+                soup = BeautifulSoup(page.text, 'lxml').find('form')
+                # print(soup)
                 form_data = self.update_form_data(soup, form_data)
                 soup = soup.find('fieldset').find('table', class_='datelist')
                 found_courses_list = soup.find_all('tr')[1:]
@@ -249,7 +249,7 @@ class ElectiveService(BaseService):
                 courses_place = td_list[7].get_text()
                 exist_courses.append(course_name)
 
-            print(courses_name + str(exist_courses))
+            # print(courses_name + str(exist_courses))
         except Exception as e:
             logging.exception(e)
 

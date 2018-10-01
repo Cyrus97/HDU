@@ -89,7 +89,7 @@ def get_clf_by_train(file_path):
     if os.path.exists(file_path):
         X_train, y_train = load_pics(file_path, kind='train')
 
-        clf = svm.SVC(C=1.0, kernel='poly', degree=1)
+        clf = svm.SVC(C=1.0, kernel='poly', degree=1, gamma='auto')
         clf.fit(X_train, y_train)
         # 保存模型
         with open('hdu.pickle', 'wb') as f:

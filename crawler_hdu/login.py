@@ -90,7 +90,6 @@ class HDU:
         print('hit %s' % home_url)
         self.do_goto_home(home_url)
         print('登录成功！你好' + self.realname + '\n')
-        exit(1)
 
     def get_cas_url(self, url):
         """从cas认证页面获取下一个转跳url"""
