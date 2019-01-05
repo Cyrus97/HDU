@@ -24,7 +24,7 @@ def main():
     elective_courses = config.get('courses', None).get('通识选修课', None)
     kwargs = dict()
     kwargs['from_email'] = config.get('from_email', None)
-    kwargs['from_email_psw'] = config.get('from_email_paw', None)
+    kwargs['from_email_psw'] = config.get('from_email_psw', None)
     kwargs['to_email'] = config.get('to_email', None)
     kwargs['delay'] = config.get('delay', None)
 

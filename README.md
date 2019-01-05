@@ -60,7 +60,7 @@ pip install -r ./requirements.txt
     ]
   },
   // 选课成功会发送邮件，如果留空则不会发送
-  "form_email": "发送通知的邮箱",
+  "from_email": "发送通知的邮箱",
   "from_email_psw": "发送通知的邮箱的密码",
   "to_email": "接收通知的邮箱",
   "delay": 5  // 选课频率，越小越快，无特殊要求不要更改
