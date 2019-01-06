@@ -14,7 +14,8 @@ def load_pics(path, kind='train'):
     kind_path = os.path.join(path, kind)
     images = []
     labels = []
-    for i in range(10):
+    # 验证码 0-8，没有 9
+    for i in range(9):
         label_path = os.path.join(kind_path, str(i))
         for file in os.listdir(label_path):
             with Image.open(os.path.join(label_path, file), 'r') as img:
