@@ -87,28 +87,7 @@ class ElectiveService(BaseService):
         self.url = ELECTIVE_URL + '?{params}'.format(params=urllib.parse.urlencode(params))
         # 通识选修课入口 url = "http://jxgl.hdu.edu.cn/xf_xsqxxxk.aspx?xh=16051717&xm=%u5218%u5174%u7136&gnmkdm=N121113"
 
-        # print(self.session.cookies)
-        SessionId = self.session.cookies.get('ASP.NET_SessionId', domain="jxgl.hdu.edu.cn")
-        route = self.session.cookies.get('route', domain="jxgl.hdu.edu.cn")
-
-        # headers = {
-        #     # 用于在选课系统里的headers
-        #     'accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        #     'accept-encoding': "gzip, deflate",
-        #     'accept-language': "zh-CN,zh;q=0.9,en;q=0.8",
-        #     'connection': "keep-alive",
-        #     'host': "jxgl.hdu.edu.cn",
-        #     'referer': self.url,
-        #     'upgrade-insecure-requests': "1",
-        #     'user-agent': "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
-        #     'cache-control': "max-age=0",
-        #     'origin': "http://jxgl.hdu.edu.cn",
-        #     'DNT': "1",
-        #     'Content-Type': "application/x-www-form-urlencoded",
-        #     # 'Cookie': "ASP.NET_SessionId={SessionId}; route={route}".format(SessionId=SessionId, route=route)
-        # }
-        # self.session.headers.update(headers)  # 更新headers
-
+        # TODO: 打印待选课程信息 %100
         form_data = self.get_form_data()
         counts = 0
         while True:
@@ -116,7 +95,7 @@ class ElectiveService(BaseService):
                 break
             counts = counts + 1
             time.sleep(self.delay)
-            print('\r第 {counts} 次'.format(counts=counts), end='')
+            print('\r第 {counts} 次尝试...'.format(counts=counts), end='')
 
             try:
                 page = self.session.post(self.url, data=form_data)
@@ -200,7 +179,7 @@ class ElectiveService(BaseService):
             '__VIEWSTATE': VIEWSTATE,
             '__EVENTVALIDATION': EVENTVALIDATION,
             # 课程性质 '人文经典与人文修养'.encode('gb2312')
-            'ddl_kcxz': '人文经典与人文修养'.encode('gb2312'),
+            'ddl_kcxz': '',
             'ddl_ywyl': '有'.encode('gb2312'),  # 有无余量 (有，无，空)
             'ddl_kcgs': '',  # 课程归属 '通识选修一般课'.encode('gb2312')
             'ddl_xqbs': "1",  # 上课校区
