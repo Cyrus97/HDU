@@ -2,5 +2,5 @@ requests>=2.21.0
 numpy>=1.15.1
 Pillow>=5.2.0
 beautifulsoup4>=4.6.3
-scikit_learn>=0.20.0
+scikit_learn>=0.20.2
 lxml>=4.2.5
