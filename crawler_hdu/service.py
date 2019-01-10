@@ -7,7 +7,10 @@ from io import BytesIO
 from PIL import Image
 from bs4 import BeautifulSoup
 
-from utils import train, util
+from utils.train import get_clf, recognize_img
+from utils.util import get_logger, send_email
+
+logger = get_logger(__name__)
 
 ELECTIVE_URL = "http://jxgl.hdu.edu.cn/xf_xsqxxxk.aspx"  # 通识选修课
 PTLLK_URL = "http://jxgl.hdu.edu.cn/xsxk.aspx"  # 普通理论课和实验课
@@ -17,17 +20,18 @@ RETRY_TIMES = 3  # 重试次数
 
 
 class BaseService:
-    def __init__(self, hdu, clf, courses, **kwargs):
+    def __init__(self, hdu, kwargs):
         self.username = hdu.username
         self.realname = hdu.realname
         self.session = hdu.session
-        self.courses = courses
-        self.clf = clf
+        self.courses = kwargs.get('courses')
+        self.clf = get_clf()
         self.from_email = kwargs.get('from_email', None)
         self.from_email_psw = kwargs.get('from_email_psw', None)
         self.to_email = kwargs.get('to_email', None)
         self.url = None
         self.delay = kwargs.get('delay', DELAY)
+        self.courses_ok = list()
 
     def start(self):
         pass
@@ -46,15 +50,14 @@ class BaseService:
     def get_verify_code(self):
         while True:
             try:
-                img = Image.open(
-                    BytesIO(self.session.get(VERIFY_CODE_URL).content))
+                img = Image.open(BytesIO(self.session.get(VERIFY_CODE_URL).content))
             except:
                 pass
             else:
                 break
         # img.show()
-        code = train.recognize_img(img, self.clf)
-        print('验证码： ' + code)
+        code = recognize_img(img, self.clf)
+        logger.debug('验证码： %s', code)
         return code
 
     def update_form_data(self, page, form_data):
@@ -73,12 +76,30 @@ class BaseService:
 
         return form_data
 
+    def print_info(self):
+        info = list()
+        for cos in self.courses:
+            info.append(cos.get('课程名称'))
+        logger.info("待选课程：%s", info)
+
+        info = list()
+        for cos in self.courses_ok:
+            info.append(cos.get('课程名称'))
+        logger.info("已选课程：%s", info)
+
+    def send_email(self, content):
+        if self.from_email and self.from_email_psw and self.to_email:
+            send_email(from_addr=self.from_email, psw=self.from_email_psw, to_addr=self.to_email, content=content)
+        else:
+            logger.warning('发送邮件失败，缺少相关数据。')
+
 
 class ElectiveService(BaseService):
     """通识选修课程的选课server"""
 
     def start(self):
         """启动抢课"""
+        logger.info('开始进行通识选修课程的选课...')
         params = {
             'xh': self.username,
             'xm': self.realname,
@@ -87,15 +108,19 @@ class ElectiveService(BaseService):
         self.url = ELECTIVE_URL + '?{params}'.format(params=urllib.parse.urlencode(params))
         # 通识选修课入口 url = "http://jxgl.hdu.edu.cn/xf_xsqxxxk.aspx?xh=16051717&xm=%u5218%u5174%u7136&gnmkdm=N121113"
 
-        # TODO: 打印待选课程信息 %100
         form_data = self.get_form_data()
         counts = 0
+
         while True:
             if not self.courses:  # 为空 或者 如果全部都为 true，即全部都已经完成
+                logger.info('恭喜，课程均已选完:)')
                 break
+            if counts % 100 == 0:
+                self.print_info()
+            logger.info('第 %s 次尝试...', counts)
+
             counts = counts + 1
             time.sleep(self.delay)
-            print('\r第 {counts} 次尝试...'.format(counts=counts), end='')
 
             try:
                 page = self.session.post(self.url, data=form_data)
@@ -136,18 +161,18 @@ class ElectiveService(BaseService):
                             info = "课程代码: {code}，课程名称: {name}, 课程性质: {nature}, 教师名称: {teacher}, 上课时间: {time}".format(
                                 code=courses_name, name=courses_name, nature=courses_nature, teacher=teacher_name,
                                 time=courses_time)
-                            print(info)
+                            logger.info("发现匹配课程：%s", info)
                             # 选课成功，发送邮件
                             # 使用 copy(form_data),为了时选课之后的表单数据依然是查询用的表单，不然会一直当作选课表单来用
                             if self.select_courses(copy(form_data), xuanke_code, courses_name, courses_code):
+                                logger.info("选课成功：%s", cos)
                                 selected.append(cos)
-                                if self.from_email and self.from_email_psw and self.to_email:
-                                    util.send_email(from_addr=self.from_email, psw=self.from_email_psw,
-                                                    to_addr=self.to_email, content=info)
+                                self.send_email(info)
                     # 把已经选择的课程移除
                     for cos in selected:
                         self.courses.remove(cos)
-                except:
+                        self.courses_ok.append(cos)
+                except Exception:
                     continue
 
     def get_form_data(self):
@@ -163,10 +188,9 @@ class ElectiveService(BaseService):
                 VIEWSTATE = soup.find('form').find('input', id='__VIEWSTATE')['value']
                 EVENTVALIDATION = soup.find('form').find('input', id='__EVENTVALIDATION')['value']
                 hidXNXQ = soup.find('form').find('input', id='hidXNXQ')['value']
-            except Exception as e:
+            except Exception:
                 if counts >= RETRY_TIMES:
-                    print("出错了！")
-                    logging.exception(e)
+                    logger.error("出错了！")
                     exit(1)
             else:
                 if VIEWSTATE and EVENTVALIDATION and hidXNXQ:
@@ -178,8 +202,7 @@ class ElectiveService(BaseService):
             '__LASTFOCUS': '',
             '__VIEWSTATE': VIEWSTATE,
             '__EVENTVALIDATION': EVENTVALIDATION,
-            # 课程性质 '人文经典与人文修养'.encode('gb2312')
-            'ddl_kcxz': '',
+            'ddl_kcxz': '',  # 课程性质 '人文经典与人文修养'.encode('gb2312')
             'ddl_ywyl': '有'.encode('gb2312'),  # 有无余量 (有，无，空)
             'ddl_kcgs': '',  # 课程归属 '通识选修一般课'.encode('gb2312')
             'ddl_xqbs': "1",  # 上课校区
@@ -230,7 +253,7 @@ class ElectiveService(BaseService):
 
             # print(courses_name + str(exist_courses))
         except Exception as e:
-            logging.exception(e)
+            logger.error('选课发生错误。')
 
         if page.status_code == 200 and courses_name in exist_courses:
             return True

@@ -15,8 +15,10 @@ def load_pics(path, kind='train'):
     images = []
     labels = []
     # 验证码 0-8，没有 9
-    for i in range(9):
+    for i in range(10):
         label_path = os.path.join(kind_path, str(i))
+        if not os.path.exists(label_path):
+            continue
         for file in os.listdir(label_path):
             with Image.open(os.path.join(label_path, file), 'r') as img:
                 images.append(np.asarray(img, dtype=np.uint8))
@@ -101,7 +103,8 @@ def get_clf_by_train(file_path):
     return clf
 
 
-def get_clf(file_path):
+def get_clf():
+    file_path = os.path.join(os.path.dirname(__file__), '../pics/')
     clf = None
     try:
         with open('hdu.pickle', 'r') as f:
@@ -113,7 +116,7 @@ def get_clf(file_path):
 
 if __name__ == '__main__':
     file_path = os.path.abspath('../pics/')
-    clf = get_clf(file_path)
+    clf = get_clf()
     X_test, y_test = load_pics(file_path, kind='test')
     print(clf.score(X_test, y_test))
     y_pred = clf.predict(X_test)
