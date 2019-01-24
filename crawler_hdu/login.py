@@ -105,3 +105,11 @@ class IHDU:
             'li').find('span').get_text()
 
         logger.info('登录成功！你好%s！', self.realname)
+
+    def extract(self):
+        hdu = {
+            'username': self.username,
+            'realname': self.realname,
+            'session': self.session,
+        }
+        return hdu

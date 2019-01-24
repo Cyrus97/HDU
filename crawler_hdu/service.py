@@ -21,9 +21,9 @@ RETRY_TIMES = 3  # 重试次数
 
 class BaseService:
     def __init__(self, hdu, kwargs):
-        self.username = hdu.username
-        self.realname = hdu.realname
-        self.session = hdu.session
+        self.username = hdu.get('username')
+        self.realname = hdu.get('realname')
+        self.session = hdu.get('session')
         self.courses = kwargs.get('courses')
         self.clf = get_clf()
         self.from_email = kwargs.get('from_email', None)
