@@ -115,3 +115,5 @@ test*.json
 # model
 */*.pickle
 *.pickle
+
+cookie*.txt
